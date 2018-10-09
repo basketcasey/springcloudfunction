@@ -7,6 +7,7 @@ import com.microsoft.azure.functions.annotation.HttpTrigger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.function.context.FunctionScan;
+import org.springframework.context.annotation.Bean;
 
 import java.util.Optional;
 
@@ -29,4 +30,10 @@ public class Function {
 
             return request.createResponseBuilder(HttpStatus.OK).body("BLAH").build();
     }
+
+    @Bean
+    public java.util.function.Function<Foo, Bar> reverseString() {
+        return foo -> new Bar(foo.reverse());
+    }
+
 }

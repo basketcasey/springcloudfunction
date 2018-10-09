@@ -7,7 +7,7 @@
     "direction" : "in",
     "webHookType" : "NONE",
     "authLevel" : "anonymous",
-    "methods" : [ "GET", "POST" ]
+    "methods" : [ "POST", "GET" ]
   }, {
     "type" : "http",
     "name" : "$return",
