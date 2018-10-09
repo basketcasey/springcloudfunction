@@ -1,3 +1,3 @@
 @echo off
 echo Deploying Functions ...
-xcopy "%DEPLOYMENT_SOURCE%/target/azure-functions/azurefunction-20181003152432846" %DEPLOYMENT_TARGET% /Y /S
+xcopy "%DEPLOYMENT_SOURCE%/target/azure-functions/springbootfunctions-20181008155935406" %DEPLOYMENT_TARGET% /Y /S
