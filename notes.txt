@@ -1,0 +1,100 @@
+NARRATIVE
+Functions themselves provide a low cost option for functionality that needs to scale quickly or
+is used infrequently.  Costs depends on usage.  There are numerous options for binding the client.
+The client may be HTTP, time-based, a message queue, etc...  Also, the Faas provider will scale as needed
+so a Denial Of Service will not use all the available resourses, instead the costs go up resulting
+in a Denial Of Wallet as they say.  That said, adding an API manager can throttle and monitor traffic.
+
+Functions become Faas dependent.  Spring provides adapters for multiple providers including AWS and Azure
+to map the incoming request to the class or bean function.  To deploy to Azure, the code needs to
+be represented in a specific format.  Currently there is only a Maven plugin available to properly
+package the function jar, function dir, and supporting artifacts into a tree that Azure understands.
+The plugin supports building, running, and deploying.  Without this, a Spring Cloud Function will
+run in the IDE but won't be formatted in a manner to be deployed successfully.  Also note that
+running the function from Spring Boot works differently than running it with the plugin.
+
+Azure supports native Java functions but not Spring Cloud Functions without the adapter.  When running the
+Spring Cloud Function from the jar that includes java native functions, the native functions are not
+accessible.  Be consistent in implementation.  Spring provides two different implementations using
+either classes or beans.
+
+Start up time for Spring Cloud Functions is considerably longer than native functions.  The reason
+is being investigated and it may be because the Faas runs the Spring function within the supplied
+Tomcat container.
+
+
+CONFIGURATION
+'Create a resource' in Azure of type function app.  You can add function apps to the menu
+for convenience.  Configure it as a Java application.  In platform features -> deployment options
+configure the pubic git repo.  Azure will configure the webhook and automatically pull in the
+function upon updates.
+Install the Azure CLI on the local machine
+Install the maven plugin for azure-functions
+
+Generate a new project in Intellij using "Create from archetype" and archetype "azure-functions-archetype".
+This configures the necessary dependencies and plugins for native functions.  Add dependencies for
+Spring Cloud Functions and the adapter if Spring is desired.  Gradle isn't a good option due to lack of
+an Azure provided plugin.
+
+SECURITY
+Security is configured for all functions within a function app.  Basically it's CC grant.  You provision the
+function app within AAD using platform features -> authentication/authorization.  Once provisioned, you reference
+that app when provisioning/associating clients.  They request a token specifying the function app as the resource.
+Standard process of adding the access token to the authorization header.
+
+DEVELOPMENT
+Check out this package for Azure-specific functions: com.microsoft.azure.functions.
+
+BUILD
+From terminal
+$ mvn azure-functions:package -DenableDebug   <-- Doesnt seem to work right, used mvn package instead
+$ mvn azure-functions:run -DenableDebug
+
+From GUI
+Use the maven tool window.  Expand the Plugins and azure-functions items.
+Run the azure-functions:package to build the app for deployment.  I had no luck with
+the deploy plugin.  You can test using the run plugin.
+
+
+DEPLOY
+Option1:
+Generate an Azure CLI service principal for use with Jenkins.  Use Jenkins to build and deploy the app.
+
+Option2:
+This function app is associated with a github repo which is webhooked to Azure.
+When the repo is pushed, Azure pulls in the repo and deploys the function.  Kudu handles the repo within Azure.
+Since Azure only cares about the function directory(ies) within the maven target directory, that content must be moved.
+Kudu handles this automatically by scanning the root for a .deployment file.  This file is an INI type file and it
+configures a command to run.  The command runs the deploy.cmd file.  This file simply copies the functions in the
+target directory to the root so the Azure hosted function app can be properly deployed.
+
+I had issues deploying using the az cli from work due to proxy and DNS config issues.  Worked from home.
+Best to configure git deployment.
+
+REFERENCE
+https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-maven-intellij
+https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-java
+https://github.com/projectkudu/kudu/wiki/Customizing-deployments
+https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-java
+
+
+STRUCTURE
+FunctionsProject
+ | - src
+ | | - main
+ | | | - java
+ | | | | - FunctionApp
+ | | | | | - MyFirstFunction.java
+ | | | | | - MySecondFunction.java
+ | - target
+ | | - azure-functions
+ | | | - FunctionApp
+ | | | | - FunctionApp.jar
+ | | | | - host.json
+ | | | | - MyFirstFunction
+ | | | | | - function.json
+ | | | | - MySecondFunction
+ | | | | | - function.json
+ | | | | - bin (shared DLLs)
+ | | | | - lib (shared JARs)
+ | - pom.xml
